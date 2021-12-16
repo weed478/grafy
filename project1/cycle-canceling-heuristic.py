@@ -98,10 +98,14 @@ def bellman_ford(E, n, s):
     d[s] = 0
 
     for i in range(n - 1):
+        updated = False
         for (u, v, w) in E:
             if d[u] + w < d[v]:
+                updated = True
                 d[v] = d[u] + w
                 parent[v] = u
+        if not updated:
+            return None
 
     for (u, v, w) in E:
         if d[u] + w < d[v]:
