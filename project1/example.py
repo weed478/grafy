@@ -5,17 +5,17 @@ from queue import PriorityQueue
 
 
 class ResNet:
-    def __init__(self, V, E, max_flow):
+    def __init__(self, V, E, s, max_flow):
         V += 1
 
         self.connections = [set() for _ in range(V)]
         self.edge_losses = dict()
         self.current_flow = dict()
 
-        self.connections[0].add(1)
-        self.edge_losses[(0, 1)] = [0] * max_flow
-        self.current_flow[(0, 1)] = 0
-        self.current_flow[(1, 0)] = 0
+        self.connections[0].add(s)
+        self.edge_losses[(0, s)] = [0] * max_flow
+        self.current_flow[(0, s)] = 0
+        self.current_flow[(s, 0)] = 0
 
         for (u, v), losses in E:
             self.connections[u].add(v)
@@ -105,7 +105,6 @@ def bellman_ford(E, n, s):
 
     for (u, v, w) in E:
         if d[u] + w < d[v]:
-            d[v] = d[u] + v
             parent[v] = u
             C = v
             for _ in range(n):
@@ -237,7 +236,7 @@ def min_cost_max_flow(G, s, t):
     find_max_flow(G, s, t)
 
     while True:
-        cycle = find_negative_cycle(G, s + 1)
+        cycle = find_negative_cycle(G, t)
         if cycle is None:
             break
         while True:
@@ -249,7 +248,7 @@ def min_cost_max_flow(G, s, t):
 
 
 def my_solve(V, k, edges):
-    G = ResNet(V, edges, k)
+    G = ResNet(V, edges, 1, k)
     return min_cost_max_flow(G, 0, len(G) - 1)
 
 
