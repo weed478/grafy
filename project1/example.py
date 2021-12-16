@@ -34,38 +34,49 @@ class ResNet:
                 losses += self.edge_losses[(u, v)][flow - 1]
         return losses
 
+    def residual_flow_and_cost(self, u, v):
+        flow = self.current_flow[(u, v)]
+        losses = self.edge_losses.get((u, v), None)
+
+        if flow == 0 and losses is not None:
+            capacity = len(losses)
+            return capacity - flow, losses[0]
+        elif 0 < flow < len(losses):
+            capacity = len(losses)
+            old_w = losses[flow - 1]
+            new_w = losses[flow]
+            delta_w = new_w - old_w
+            return capacity - flow, delta_w
+        elif flow < -1:
+            losses = self.edge_losses[(v, u)]
+            old_w = losses[-flow - 1]
+            new_w = losses[-flow - 2]
+            delta_w = new_w - old_w
+            return -flow, delta_w
+        elif flow < 0:
+            losses = self.edge_losses[(v, u)]
+            return -flow, -losses[0]
+
+        return None
+
     def residual_flows_and_costs(self, u):
         for v in self.connections[u]:
-            flow = self.current_flow[(u, v)]
-            losses = self.edge_losses.get((u, v), None)
-
-            if flow == 0 and losses is not None:
-                capacity = len(losses)
-                yield v, capacity - flow, losses[0]
-            elif 0 < flow < len(losses):
-                capacity = len(losses)
-                old_w = losses[flow - 1]
-                new_w = losses[flow]
-                delta_w = new_w - old_w
-                yield v, capacity - flow, delta_w
-            elif flow < -1:
-                losses = self.edge_losses[(v, u)]
-                old_w = losses[-flow - 1]
-                new_w = losses[-flow - 2]
-                delta_w = new_w - old_w
-                yield v, -flow, delta_w
-            elif flow < 0:
-                losses = self.edge_losses[(v, u)]
-                yield v, -flow, -losses[0]
+            fc = self.residual_flow_and_cost(u, v)
+            if fc is not None:
+                yield v, fc[0], fc[1]
 
     def cost_edges(self):
         for u in range(len(self)):
-            for v, flow, w in self.residual_flows_and_costs(u):
-                yield u, v, w
+            for v in self.connections[u]:
+                fc = self.residual_flow_and_cost(u, v)
+                if fc is not None:
+                    yield u, v, fc[1]
 
     def residual_flows(self, u):
-        for v, flow, w in self.residual_flows_and_costs(u):
-            yield v, flow
+        for v in self.connections[u]:
+            fc = self.residual_flow_and_cost(u, v)
+            if fc is not None:
+                yield v, fc[0]
 
 
 def backtrack_path(parents, s):
@@ -110,6 +121,18 @@ def bellman_ford(E, n, s):
 
 def find_negative_cycle(G, s):
     return bellman_ford(list(G.cost_edges()), len(G), s)
+
+
+def is_negative_cycle(G, cycle):
+    cost = 0
+    u = cycle[0]
+    for v in cycle[1:]:
+        fc = G.residual_flow_and_cost(u, v)
+        if fc is None:
+            return False
+        cost += fc[1]
+        u = v
+    return cost < 0
 
 
 def bfs(G, s, t):
@@ -177,7 +200,10 @@ def min_cost_max_flow(G, s, t):
         cycle = find_negative_cycle(G, s + 1)
         if cycle is None:
             break
-        run_flow(G, cycle, 1)
+        while True:
+            run_flow(G, cycle, 1)
+            if not is_negative_cycle(G, cycle):
+                break
 
     return G.get_losses()
 
