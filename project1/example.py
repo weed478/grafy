@@ -1,6 +1,7 @@
 from data import runtests
 from math import inf
 from collections import deque
+from queue import PriorityQueue
 
 
 class ResNet:
@@ -77,6 +78,12 @@ class ResNet:
             fc = self.residual_flow_and_cost(u, v)
             if fc is not None:
                 yield v, fc[0]
+
+    def residual_non_negative_costs(self, u):
+        for v in self.connections[u]:
+            fc = self.residual_flow_and_cost(u, v)
+            if fc is not None and fc[1] >= 0:
+                yield v, fc[1]
 
 
 def backtrack_path(parents, s):
@@ -190,7 +197,43 @@ def find_max_flow(G, s, t):
     return ford_fulkerson(G, s, t)
 
 
+def dijkstra(G, s, t):
+    V = len(G)
+    Q = PriorityQueue()
+    d = [inf] * V
+    visited = [False] * V
+    parents = [None] * V
+    d[s] = 0
+    Q.put((d[s], s))
+
+    while not Q.empty():
+        _, u = Q.get()
+        if visited[u]:
+            continue
+        visited[u] = True
+
+        for v, w_uv in G.residual_non_negative_costs(u):
+            if d[u] + w_uv < d[v]:
+                d[v] = d[u] + w_uv
+                Q.put((d[v], v))
+                parents[v] = u
+
+    if d[t] < inf:
+        return backtrack_path(parents, t)
+    else:
+        return None
+
+
+def init_flow_heuristic(G, s, t):
+    while True:
+        path = dijkstra(G, s, t)
+        if path is None:
+            break
+        run_flow(G, path, 1)
+
+
 def min_cost_max_flow(G, s, t):
+    init_flow_heuristic(G, s, t)
     find_max_flow(G, s, t)
 
     while True:
