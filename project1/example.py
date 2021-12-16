@@ -90,14 +90,11 @@ def bellman_ford(E, n, s):
     d = [inf] * n
     d[s] = 0
 
-    def relax(u, v, w):
-        if d[u] + w < d[v]:
-            d[v] = d[u] + w
-            parent[v] = u
-
     for i in range(n - 1):
         for (u, v, w) in E:
-            relax(u, v, w)
+            if d[u] + w < d[v]:
+                d[v] = d[u] + w
+                parent[v] = u
 
     for (u, v, w) in E:
         if d[u] + w < d[v]:
