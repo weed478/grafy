@@ -129,7 +129,6 @@ class ResNet:
     def get_losses(self):
         losses = 0
         for (u, v), flow in self.current_flow.items():
-            assert flow == -self.current_flow[(v, u)]
             if flow > 0:
                 losses += self.edge_losses[(u, v)][flow - 1]
         return losses
