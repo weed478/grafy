@@ -350,7 +350,8 @@ def min_cost_max_flow(G, s, t):
 
     while True:
         cycle = find_negative_cycle(G, t)
-        if cycle is None:
+        # wykluczanie cykli z jedną krawędzią w 2 strony
+        if cycle is None or len(cycle) < 4:
             break
         while True:
             run_flow(G, cycle, 1)
