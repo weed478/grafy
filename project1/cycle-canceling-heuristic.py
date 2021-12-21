@@ -247,6 +247,14 @@ def is_negative_cycle(G, cycle):
     return cost < 0
 
 
+# czy cykl wraca po tych samych krawędziach
+def is_trivial(cycle):
+    for i in range(len(cycle)):
+        if cycle[i] != cycle[-i - 1]:
+            return False
+    return True
+
+
 def bfs(G, s, t):
     V = len(G)
     visited = [False] * V
@@ -350,8 +358,7 @@ def min_cost_max_flow(G, s, t):
 
     while True:
         cycle = find_negative_cycle(G, t)
-        # wykluczanie cykli z jedną krawędzią w 2 strony
-        if cycle is None or len(cycle) < 4:
+        if cycle is None or is_trivial(cycle):
             break
         while True:
             run_flow(G, cycle, 1)
