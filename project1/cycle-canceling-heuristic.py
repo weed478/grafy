@@ -48,6 +48,15 @@ jednak gwarancję znalezienia cykli,
 ponieważ wierzchołek ten będzie połączony
 ścieżkami pomniejszającymi z resztą sieci.
 Zródło jednak może nie być połączone z resztą grafu.
+Ważną modyfikacją Bellmana-Forda jest
+wykluczanie relaksacji krawędzi (u, v),
+jeżeli parent[u] == v.
+Gdyby taka krawędź została zrelaksowana
+i parent[v] ustawiony na u,
+koszt powstałego cyklu nie byłby poprawny
+(koszt byłby niezerowy ale tak naprawdę
+przepływ zostałby taki sam, bo wracamy po
+tych samych krawędziach w drugą stronę).
 
 Złożoność:
 inicjalizacja - Edmonds-Karp O(VE^2)
@@ -204,7 +213,7 @@ def bellman_ford(E, n, s):
     for i in range(n - 1):
         updated = False
         for (u, v, w) in E:
-            if d[u] + w < d[v]:
+            if d[u] + w < d[v] and parent[u] != v:
                 updated = True
                 d[v] = d[u] + w
                 parent[v] = u
@@ -245,14 +254,6 @@ def is_negative_cycle(G, cycle):
         cost += fc[1]
         u = v
     return cost < 0
-
-
-# czy cykl wraca po tych samych krawędziach
-def is_trivial(cycle):
-    for i in range(len(cycle)):
-        if cycle[i] != cycle[-i - 1]:
-            return False
-    return True
 
 
 def bfs(G, s, t):
@@ -358,7 +359,7 @@ def min_cost_max_flow(G, s, t):
 
     while True:
         cycle = find_negative_cycle(G, t)
-        if cycle is None or is_trivial(cycle):
+        if cycle is None:
             break
         while True:
             run_flow(G, cycle, 1)
