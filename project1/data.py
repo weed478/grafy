@@ -77,6 +77,22 @@ def make_random_dag_args(V, k, conn, cap_min, cap_max, step_min, step_max):
     return [V, k, edges]
 
 
+def make_random_graph_args(V, k, conn, cap_min, cap_max, step_min, step_max):
+    def flip(): return myrand(0, 1000) / 1000.0 < conn
+
+    edges = []
+    for i in range(1, V+1):
+        for j in range(i+1, V+1):
+            if flip():
+                cap = myrand(cap_min, cap_max)
+                costs1 = random_cost_list(cap, step_min, step_max)
+                costs2 = random_cost_list(cap, step_min, step_max)
+                edges.append(((i, j), costs1))
+                edges.append(((j, i), costs2))
+
+    return [V, k, edges]
+
+
 
 problems = [
     {"arg": [4, 4,
@@ -113,6 +129,19 @@ problems = [
         ]],
     "hint": 44
     },
+    {"arg": [5, 2,
+        [
+            ((1,2), [1, 3]),
+            ((1,3), [1, 1000]),
+            ((3,2), [1, 3]),
+            ((2,4), [1, 3]),
+            ((3,4), [1, 3]),
+            ((4,5), [100, 200]),
+            ((3,5), [1, 3]),
+            ((4,3), [1, 3])
+        ]],
+    "hint": 7
+    },
     {"arg": make_grid_args(7, 7, 9, [1,3,6,11,20,35,80,200,1300]),
     "hint": 176
     },
@@ -133,7 +162,10 @@ problems = [
     },
     {"arg": make_random_dag_args(150, 20, 0.2, 7, 15, 1, 15),
     "hint": 272
-    }
+    },
+    {"arg": make_random_graph_args(10, 5, 0.4, 3, 5, 2, 9),
+    "hint": 55
+    },
 ]
 
 
