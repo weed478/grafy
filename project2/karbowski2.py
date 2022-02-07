@@ -20,10 +20,40 @@ def perfect_matching(E):
 
 
 def extract_cycles(V, E):
-    G = nx.Graph()
-    G.add_nodes_from(range(1, V + 1))
-    G.add_edges_from(E)
-    return [list(nx.dfs_postorder_nodes(G.subgraph(c))) for c in nx.connected_components(G)]
+    # build adj list
+    G = [[] for _ in range(V + 1)]
+    for e in E:
+        G[e[0]].append(e[1])
+        G[e[1]].append(e[0])
+
+    # output cycles
+    cycles = []
+
+    visited = [False] * (V + 1)
+
+    # for every vertex not added to output
+    for s in range(1, V + 1):
+        if visited[s]:
+            continue
+
+        # local cycle
+        C = [s]
+        visited[s] = True
+
+        # set direction of cycle v -> u
+        v = s
+        u = G[s][0]
+
+        # go around the cycle
+        while u != s:
+            C.append(u)
+            visited[u] = True
+            # continue in the same direction (v -> u)
+            u, v = G[u][1] if G[u][0] == v else G[u][0], u
+
+        cycles.append(C)
+
+    return cycles
 
 
 def my_solve(V_in, E_in):
