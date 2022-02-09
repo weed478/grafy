@@ -1,22 +1,39 @@
 from data import runtests
-import networkx as nx
+from time import time
+from random import shuffle
 
 
 def maximal_matching(E):
-    matching = set()
-    nodes = set()
+    matching = []
+    used = set()
     for u, v in E:
-        if u not in nodes and v not in nodes and u != v:
-            matching.add((u, v))
-            nodes.add(u)
-            nodes.add(v)
+        if u not in used and v not in used:
+            matching.append((u, v))
+            used.add(u)
+            used.add(v)
     return matching
 
 
-def perfect_matching(E):
-    G = nx.Graph()
-    G.add_edges_from(E)
-    return nx.max_weight_matching(G)
+def is_perfect_matching(M, V):
+    return 2 * len(M) == V
+
+
+def xd_matching(V, E):
+    stop = time() + 0.9
+    while time() < stop:
+        shuffle(E)
+        M = maximal_matching(E)
+        if is_perfect_matching(M, V):
+            return M
+    return []
+
+
+def perfect_matching(V, E):
+    # import networkx as nx
+    # G = nx.Graph()
+    # G.add_edges_from(E)
+    # return nx.max_weight_matching(G)
+    return xd_matching(V, E)
 
 
 def extract_cycles(V, E):
@@ -103,10 +120,10 @@ def my_solve(V_in, E_in):
 
         E.append((v, u))
 
-    M = perfect_matching(E)
+    M = perfect_matching(V, E)
 
     # is not perfect => no solution
-    if 2 * len(M) != V:
+    if not is_perfect_matching(M, V):
         return []
 
     # build cycle graph (made of disjoint cycles)
